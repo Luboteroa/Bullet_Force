@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Animator goldAnimator;
     [SerializeField] private TextMeshProUGUI goldCount;
     [SerializeField] private int animationSpeed = 1;
+    [SerializeField] private AudioSource coinSound;
     private int goldAmount = 0, scoreToReach = 0;
 
     private void Start() 
@@ -71,6 +72,7 @@ public class GameManager : MonoBehaviour
         //After popup animation is finished, increase gold value with an animation
         scoreToReach += MissionsArray[key].gold;
         goldAnimator.SetTrigger("Trigger");
+        coinSound.Play();
     }
 
     #endregion

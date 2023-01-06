@@ -3,52 +3,69 @@ using UnityEngine.Networking;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
-using Player;
 
-namespace JsonUtilities
+[System.Serializable]
+public class User
 {
-    public class HttpClient : MonoBehaviour
+    public string firstName;
+    public string lastName;
+    public string university;
+    public Company company;
+}
+
+[System.Serializable]
+public class Company
+{
+    public string department;
+}
+
+[System.Serializable]
+public class ResponseObject
+{
+    public List<User> users;
+}
+
+public class HttpClient : MonoBehaviour
+{
+    public TextMeshProUGUI textComponent;
+    public string apiUrl = "https://dummyjson.com/users/search?q=John";
+
+    void Start()
     {
-        public TextMeshProUGUI textComponent;
-        public string apiUrl = "https://dummyjson.com/users/search?q=John";
+        StartCoroutine(GetRequest(apiUrl));
+    }
 
-        void Start()
+    IEnumerator GetRequest(string uri)
+    {
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
         {
-            StartCoroutine(GetRequest(apiUrl));
-        }
+            // Request and wait for the desired page.
+            yield return webRequest.SendWebRequest();
 
-        IEnumerator GetRequest(string uri)
-        {
-            using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
+            string[] pages = uri.Split('/');
+            int page = pages.Length - 1;
+
+            if (webRequest.result == UnityWebRequest.Result.ConnectionError)
             {
-                // Request and wait for the desired page.
-                yield return webRequest.SendWebRequest();
+                Debug.Log(pages[page] + ": Error: " + webRequest.error);
+            }
+            else
+            {
+                // Parse the JSON response
+                ResponseObject response = JsonUtility.FromJson<ResponseObject>(webRequest.downloadHandler.text);
 
-                string[] pages = uri.Split('/');
-                int page = pages.Length - 1;
-
-                if (webRequest.result == UnityWebRequest.Result.ConnectionError)
+                // Access the data in the response object
+                string data = "";
+                foreach(User user in response.users)
                 {
-                    Debug.Log(pages[page] + ": Error: " + webRequest.error);
+                    data += user.firstName + "\n\n" + 
+                            user.lastName + "\n\n" + 
+                            user.university + "\n\n" + 
+                            user.company.department;
                 }
-                else
-                {
-                    // Parse the JSON response
-                    ResponseObject response = JsonUtility.FromJson<ResponseObject>(webRequest.downloadHandler.text);
 
-                    // Access the data in the response object
-                    string data = "";
-                    foreach(User user in response.users)
-                    {
-                        data += user.firstName + "\n\n" + 
-                                user.lastName + "\n\n" + 
-                                user.university + "\n\n" + 
-                                user.company.department;
-                    }
-
-                    // Set the text of the TMP text component
-                    textComponent.text = data;
-                }
+                // Set the text of the TMP text component
+                textComponent.text = data;
             }
         }
     }
